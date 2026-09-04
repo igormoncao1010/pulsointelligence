@@ -24,6 +24,24 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 table tbody tr { transition: background-color .18s ease; }
 table tbody tr:hover { background: #f8fafc; }
 
+/* A navegação lateral permanece inteira em notebooks e janelas de baixa altura. */
+aside {
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+aside > nav {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: .5rem;
+  scrollbar-color: #334155 transparent;
+  scrollbar-width: thin;
+}
+aside > nav::-webkit-scrollbar-thumb { background: #334155; }
+aside > nav::-webkit-scrollbar-track { background: transparent; }
+
 @keyframes enter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @keyframes soft-pop { from { opacity: 0; transform: scale(.985); } to { opacity: 1; transform: scale(1); } }
 .enter { animation: enter .42s cubic-bezier(.2,.8,.2,1) both; }
