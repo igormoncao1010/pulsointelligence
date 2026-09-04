@@ -1,4 +1,4 @@
-export type SourceType = 'rss' | 'news' | 'youtube' | 'bluesky' | 'telegram' | 'reddit' | 'future';
+export type SourceType = 'rss' | 'news' | 'youtube' | 'bluesky' | 'mastodon' | 'telegram' | 'reddit' | 'future';
 export interface NormalizedContent {
   source: string; sourceId?: string; sourceType: SourceType; externalId: string;
   title: string; description: string; content: string; author?: string;
