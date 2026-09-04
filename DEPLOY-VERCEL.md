@@ -16,6 +16,10 @@ Para acrescentar os novos feeds RSS validados, execute também:
 
 `supabase/migrations/202609040003_more_rss_sources.sql`
 
+Para acrescentar o segundo lote nacional e regional, execute:
+
+`supabase/migrations/202609040004_expanded_rss_sources.sql`
+
 ## 1. Enviar para o GitHub
 
 1. Crie um repositório vazio no GitHub.

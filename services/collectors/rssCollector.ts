@@ -5,9 +5,9 @@ import { matchKeywords, type MonitorKeyword } from '@/services/matching/keywordM
 import type { CollectorResult, ContentCollector, NormalizedContent } from '@/types/content';
 
 type RssSource = { id:string; name:string; rss_url:string; site_url:string|null; };
-const parser = new Parser({ timeout: 12000, headers: { 'User-Agent': 'PulsoMediaBot/1.0 (+responsible RSS monitoring)' } });
+const parser = new Parser();
 export class RssCollector implements ContentCollector<RssSource> {
-  async collect(source:RssSource){ const feed=await parser.parseURL(source.rss_url); return feed.items.map(item=>this.normalize({...item,_source:source})).filter(item=>this.validate(item)); }
+  async collect(source:RssSource){ const response=await fetch(source.rss_url,{headers:{'User-Agent':'PulsoMediaBot/1.0 (+responsible RSS monitoring)','Accept':'application/rss+xml, application/xml, text/xml'},signal:AbortSignal.timeout(12000)}); if(!response.ok)throw new Error(`HTTP ${response.status} em ${source.name}`); const feed=await parser.parseString(await response.text()); return feed.items.slice(0,100).map(item=>this.normalize({...item,_source:source})).filter(item=>this.validate(item)); }
   normalize(raw:any):NormalizedContent { const source=raw._source as RssSource; const url=raw.link??raw.guid??''; return {source:source.name,sourceId:source.id,sourceType:'rss',externalId:String(raw.guid??url),title:String(raw.title??'Sem título'),description:String(raw.contentSnippet??raw.summary??''),content:String(raw.content??raw['content:encoded']??raw.contentSnippet??''),author:raw.creator??raw.author,url,canonicalUrl:url.split('#')[0],imageUrl:raw.enclosure?.url,publishedAt:new Date(raw.isoDate??raw.pubDate??Date.now()).toISOString(),metadata:{categories:raw.categories??[]}}; }
   validate(item:NormalizedContent){ return Boolean(item.title&&item.url&&/^https?:\/\//.test(item.url)); }
 }
