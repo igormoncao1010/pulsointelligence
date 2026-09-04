@@ -26,6 +26,10 @@ Para trocar a coleta diária por uma coleta gratuita a cada 30 minutos, edite e 
 
 Antes de executar, substitua o texto `COLE_AQUI_O_MESMO_CRON_SECRET_DA_VERCEL` pelo valor de `CRON_SECRET` que está na Vercel. Não publique o arquivo preenchido no GitHub; envie ao GitHub somente a versão com o texto de exemplo.
 
+Para habilitar a organização por projetos e colocar monitores antigos no projeto `Geral`, execute:
+
+`supabase/migrations/202609040006_single_tenant_projects.sql`
+
 ## 1. Enviar para o GitHub
 
 1. Crie um repositório vazio no GitHub.

@@ -4,6 +4,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 type Payload = {
+  projectId?: unknown;
   name?: unknown;
   required?: unknown;
   related?: unknown;
@@ -18,19 +19,22 @@ const normalizeTerms = (value: unknown) => {
 export async function POST(request: Request) {
   try {
     const payload = await request.json() as Payload;
+    const projectId = typeof payload.projectId === 'string' ? payload.projectId : '';
     const name = typeof payload.name === 'string' ? payload.name.trim().slice(0, 120) : '';
     const required = normalizeTerms(payload.required);
     const related = normalizeTerms(payload.related);
     const excluded = normalizeTerms(payload.excluded);
 
-    if (!name || required.length === 0) {
-      return Response.json({ error: 'Informe o nome e pelo menos uma palavra obrigatória.' }, { status: 400 });
+    if (!projectId || !name || required.length === 0) {
+      return Response.json({ error: 'Selecione o projeto, informe o nome e pelo menos uma palavra obrigatória.' }, { status: 400 });
     }
 
     const db = createAdminClient();
+    const { data: project, error: projectError } = await db.from('projects').select('id').eq('id', projectId).eq('status', 'active').maybeSingle();
+    if (projectError || !project) return Response.json({ error: 'Projeto não encontrado.' }, { status: 404 });
     const { data: monitor, error: monitorError } = await db
       .from('monitors')
-      .insert({ project_id: null, name, status: 'active', language: 'pt-BR', country: 'BR' })
+      .insert({ project_id: projectId, name, status: 'active', language: 'pt-BR', country: 'BR' })
       .select('id,name,status')
       .single();
     if (monitorError) throw monitorError;
