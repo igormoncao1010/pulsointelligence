@@ -12,6 +12,10 @@ Antes de publicar esta versão, abra o **SQL Editor** do Supabase e execute o co
 
 Essa alteração permite salvar monitores reais nesta primeira versão de organização única, ainda sem tela de login.
 
+Para acrescentar os novos feeds RSS validados, execute também:
+
+`supabase/migrations/202609040003_more_rss_sources.sql`
+
 ## 1. Enviar para o GitHub
 
 1. Crie um repositório vazio no GitHub.
