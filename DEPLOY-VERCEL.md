@@ -30,6 +30,10 @@ Para habilitar a organização por projetos e colocar monitores antigos no proje
 
 `supabase/migrations/202609040006_single_tenant_projects.sql`
 
+Para desativar temporariamente os feeds estaduais solicitados do G1 e adicionar as fontes validadas de Goiás, execute:
+
+`supabase/migrations/202609040007_goias_sources.sql`
+
 ## 1. Enviar para o GitHub
 
 1. Crie um repositório vazio no GitHub.

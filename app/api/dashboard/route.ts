@@ -10,7 +10,7 @@ export async function GET(){
    db.from('mentions').select('*',{count:'exact',head:true}).gte('created_at',d7.toISOString()),
    db.from('mentions').select('*',{count:'exact',head:true}).gte('created_at',d30.toISOString()),
    db.from('sources').select('*',{count:'exact',head:true}).eq('active',true),
-   db.from('sources').select('id,name,domain,source_type,category,active,last_checked_at').order('name'),
+   db.from('sources').select('id,name,domain,source_type,category,active,last_checked_at').eq('active',true).order('name'),
    db.from('projects').select('id,name,description,status,created_at').eq('status','active').order('created_at'),
    db.from('monitors').select('*',{count:'exact',head:true}).eq('status','active'),
    db.from('monitors').select('id,project_id,name,status,created_at,monitor_keywords(keyword,type),mentions(id,created_at,relevance_score,matched_text,articles(title,description,url,published_at,sources(name),sentiment_analysis(sentiment,score)))').order('created_at',{ascending:false}),
