@@ -15,11 +15,12 @@ export class RssCollector implements ContentCollector<RssSource> {
 }
 const hashContent=(item:NormalizedContent)=>createHash('sha256').update(`${item.title}|${item.content}`).digest('hex');
 
-export async function collectActiveRssSources():Promise<CollectorResult[]> {
+export async function collectActiveRssSources(options:{batch?:number;totalBatches?:number}={}):Promise<CollectorResult[]> {
   const db=createAdminClient(); const {data:sources,error}=await db.from('sources').select('id,name,rss_url,site_url').eq('active',true).eq('source_type','rss').not('rss_url','is',null); if(error) throw error;
   const {data:monitors,error:monitorsError}=await db.from('monitors').select('id,monitor_keywords(id,keyword,type)').eq('status','active'); if(monitorsError) throw monitorsError;
+  const totalBatches=Math.max(1,Math.min(8,options.totalBatches??1)); const batch=Math.max(0,Math.min(totalBatches-1,options.batch??0)); const selected=(sources??[]).filter((_,index)=>index%totalBatches===batch) as RssSource[];
   const collector=new RssCollector(); const results:CollectorResult[]=[];
-  for(const source of (sources??[]) as RssSource[]){ const started=Date.now(); const result:CollectorResult={sourceId:source.id,found:0,inserted:0,duplicates:0,mentions:0,errors:[],durationMs:0};
+  for(const source of selected){ const started=Date.now(); const result:CollectorResult={sourceId:source.id,found:0,inserted:0,duplicates:0,mentions:0,errors:[],durationMs:0};
    try { const items=await collector.collect(source); result.found=items.length;
     for(const item of items){ const hash=hashContent(item); const {data:article,error:upsertError}=await db.from('articles').upsert({source_id:source.id,external_id:item.externalId,title:item.title,description:item.description,content:item.content,author:item.author,url:item.url,canonical_url:item.canonicalUrl,image_url:item.imageUrl,published_at:item.publishedAt,language:'pt-BR',hash},{onConflict:'canonical_url',ignoreDuplicates:true}).select('id').maybeSingle();
      if(upsertError){result.errors.push(upsertError.message);continue;} let articleId=article?.id as string|undefined; if(!articleId){result.duplicates++;const {data:existing,error:existingError}=await db.from('articles').select('id').eq('canonical_url',item.canonicalUrl).maybeSingle();if(existingError||!existing){if(existingError)result.errors.push(existingError.message);continue;}articleId=existing.id;}else result.inserted++;

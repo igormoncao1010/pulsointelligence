@@ -20,6 +20,12 @@ Para acrescentar o segundo lote nacional e regional, execute:
 
 `supabase/migrations/202609040004_expanded_rss_sources.sql`
 
+Para trocar a coleta diária por uma coleta gratuita a cada 30 minutos, edite e execute:
+
+`supabase/migrations/202609040005_cron_every_30_minutes.sql`
+
+Antes de executar, substitua o texto `COLE_AQUI_O_MESMO_CRON_SECRET_DA_VERCEL` pelo valor de `CRON_SECRET` que está na Vercel. Não publique o arquivo preenchido no GitHub; envie ao GitHub somente a versão com o texto de exemplo.
+
 ## 1. Enviar para o GitHub
 
 1. Crie um repositório vazio no GitHub.
