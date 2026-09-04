@@ -53,7 +53,7 @@ Antes de clicar em **Deploy**, abra **Environment Variables** e crie:
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: a chave pública/anon que você já possui.
 - `SUPABASE_SERVICE_ROLE_KEY`: a chave privada `service_role`, encontrada no Supabase em **Project Settings > API** ou **API Keys**. Nunca coloque essa chave no GitHub.
 - `CRON_SECRET`: uma senha longa e aleatória criada por você, com pelo menos 32 caracteres.
-- `YOUTUBE_API_KEY`: opcional por enquanto.
+- `YOUTUBE_API_KEY`: chave da YouTube Data API v3 usada para coletar vídeos reais de cada monitoramento.
 - `AI_PROVIDER`: use o valor `heuristic`.
 - `AI_API_KEY`: opcional por enquanto.
 
@@ -65,6 +65,12 @@ Clique em **Deploy**. Quando terminar, abra o endereço terminado em `.vercel.ap
 
 ## 5. Coleta automática
 
-O arquivo `vercel.json` agenda uma coleta diária às 08:00 UTC, equivalente a 05:00 no horário de Brasília. A Vercel usa `CRON_SECRET` para proteger essa chamada. A primeira tela pode aparecer vazia até a primeira coleta.
+O Supabase Cron configurado pela migração `202609040005_cron_every_30_minutes.sql` chama a rota protegida de coleta em oito lotes, duas vezes por hora. Cada lote coleta uma parte das fontes RSS e dos monitoramentos do YouTube. A primeira tela pode aparecer vazia até a primeira execução correspondente ao lote do monitoramento.
+
+Ao adicionar `YOUTUBE_API_KEY` depois do primeiro deploy, faça um **Redeploy** na Vercel. A variável só passa a existir nas novas publicações.
+
+## 6. Relatórios em PDF
+
+Abra **Monitoramentos**, escolha um monitor e clique em **Baixar relatório em PDF**. O arquivo é produzido no navegador com as métricas reais atuais e não ocupa espaço adicional no Supabase. O navegador fará o download com o nome do monitoramento e a data de geração.
 
 Cada alteração futura enviada ao GitHub inicia automaticamente uma nova publicação na Vercel.
