@@ -131,7 +131,7 @@ export async function collectYoutubeMonitors(
       result.found = items.length;
 
       for (const item of items) {
-        const match = matchKeywords(`${item.title}\n${item.description}\n${item.content}`, monitor.monitor_keywords);
+        const match = matchKeywords({ title:item.title, description:item.description, content:item.content, publishedAt:item.publishedAt }, monitor.monitor_keywords);
         if (!match.matched) continue;
         const { data: insertedArticle, error: articleError } = await db.from('articles').upsert({
           source_id: source.id, external_id: item.externalId, title: item.title, description: item.description,
