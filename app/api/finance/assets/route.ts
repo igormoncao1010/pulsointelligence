@@ -19,13 +19,18 @@ export async function GET(request:Request){
     ]);
     if(error)throw error;
     const assets=(data??[]) as Asset[];
+    const assetIds=assets.map(item=>item.id);
+    const historyResult=assetIds.length
+      ? await db.from('financial_quotes').select('asset_id,price,change_percent,volume,currency,provider,market_time,collected_at').in('asset_id',assetIds).order('collected_at',{ascending:true}).limit(3000)
+      : {data:[],error:null};
+    if(historyResult.error)throw historyResult.error;
     const crypto=assets.filter(item=>item.asset_type==='crypto').map(item=>item.symbol);
     const brapi=assets.filter(item=>item.asset_type!=='crypto').map(item=>item.symbol);
     const [brapiResult,cryptoResult,indicatorResult]=await Promise.allSettled([getBrapiQuotes(brapi),getCryptoQuotes(crypto),getEconomicIndicators()]);
     const quotes=[brapiResult,cryptoResult].flatMap(result=>result.status==='fulfilled'?result.value:[]);
     const indicators=indicatorResult.status==='fulfilled'?indicatorResult.value:[];
     const failures=[brapiResult,cryptoResult,indicatorResult].filter(result=>result.status==='rejected').map(result=>result.reason instanceof Error?result.reason.message:'Fonte indisponível');
-    return Response.json({assets,quotes,indicators,news:mentions??[],provider:'brapi.dev · CoinGecko · BCB',marketError:failures.length?failures.join(' · '):undefined,updatedAt:new Date().toISOString()});
+    return Response.json({assets,quotes,history:historyResult.data??[],indicators,news:mentions??[],provider:'brapi.dev · CoinGecko · BCB',marketError:failures.length?failures.join(' · '):undefined,updatedAt:new Date().toISOString()});
   }catch(error){console.error('[api/finance/assets GET]',error);return Response.json({error:'Não foi possível carregar os ativos.'},{status:500})}
 }
 
