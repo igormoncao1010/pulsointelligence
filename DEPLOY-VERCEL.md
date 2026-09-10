@@ -60,6 +60,8 @@ Antes de clicar em **Deploy**, abra **Environment Variables** e crie:
 - `YOUTUBE_API_KEY`: chave da YouTube Data API v3 usada para coletar vídeos reais de cada monitoramento.
 - `AI_PROVIDER`: use o valor `heuristic`.
 - `AI_API_KEY`: opcional por enquanto.
+- `BRAPI_TOKEN`: token secreto da brapi.dev para ativos brasileiros.
+- `COINGECKO_API_KEY`: chave secreta do plano Demo do CoinGecko para criptomoedas.
 
 Marque **Production**, **Preview** e **Development** para todas as variáveis usadas. A `SUPABASE_SERVICE_ROLE_KEY` e o `CRON_SECRET` são segredos e devem existir somente na Vercel/Supabase, nunca em arquivos enviados ao GitHub.
 
@@ -78,3 +80,10 @@ Ao adicionar `YOUTUBE_API_KEY` depois do primeiro deploy, faça um **Redeploy** 
 Abra **Monitoramentos**, escolha um monitor e clique em **Baixar relatório em PDF**. O arquivo é produzido no navegador com as métricas reais atuais e não ocupa espaço adicional no Supabase. O navegador fará o download com o nome do monitoramento e a data de geração.
 
 Cada alteração futura enviada ao GitHub inicia automaticamente uma nova publicação na Vercel.
+
+## 7. Pulso Mercados
+
+Depois da migration `202609090012_financial_market_module.sql`, execute também
+`202609100013_financial_quotes.sql` no SQL Editor do Supabase. Ela cria o
+histórico compacto alimentado pela coleta automática de 30 minutos. Banco
+Central e notícias já coletadas não exigem uma nova chave.
