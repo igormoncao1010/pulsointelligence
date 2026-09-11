@@ -1,7 +1,0 @@
-import type { ContentCollector, NormalizedContent } from '@/types/content';
-type YoutubeSearchItem={id:{videoId?:string};snippet:{title:string;description:string;publishedAt:string;channelId:string;channelTitle:string;thumbnails?:{high?:{url:string};default?:{url:string}}}};
-export class YoutubeCollector implements ContentCollector<string>{
- async collect(query:string){const key=process.env.YOUTUBE_API_KEY;if(!key)throw new Error('YOUTUBE_API_KEY não configurada');const url=new URL('https://www.googleapis.com/youtube/v3/search');url.search=new URLSearchParams({part:'snippet',type:'video',maxResults:'25',order:'date',q:query,key}).toString();const response=await fetch(url);if(!response.ok)throw new Error(`YouTube API: ${response.status}`);const body=await response.json() as {items:YoutubeSearchItem[]};return body.items.map(i=>this.normalize(i)).filter(i=>this.validate(i));}
- normalize(raw:unknown):NormalizedContent{const item=raw as YoutubeSearchItem;const id=item.id.videoId??'';return{source:item.snippet.channelTitle,sourceType:'youtube',externalId:id,title:item.snippet.title,description:item.snippet.description,content:item.snippet.description,author:item.snippet.channelTitle,url:`https://www.youtube.com/watch?v=${id}`,imageUrl:item.snippet.thumbnails?.high?.url??item.snippet.thumbnails?.default?.url,publishedAt:item.snippet.publishedAt,metadata:{channelId:item.snippet.channelId}};}
- validate(content:NormalizedContent){return Boolean(content.externalId&&content.title&&content.url);}
-}
