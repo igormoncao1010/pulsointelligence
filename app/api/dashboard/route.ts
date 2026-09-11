@@ -29,5 +29,5 @@ export async function GET(){
   });
   const projects=(projectsRows.data??[]).map(project=>({...project,monitorCount:monitors.filter(monitor=>monitor.projectId===project.id).length}));
   return Response.json({connected:true,metrics:{today:todayCount.count??0,week:weekCount.count??0,month:monthCount.count??0,sources:sourcesCount.count??0,monitors:monitorsCount.count??0},projects,sources:sourceRows.data??[],monitors,mentions:recent.data??[],updatedAt:now.toISOString()});
- }catch(error){console.error('[api/dashboard]',error);return Response.json({connected:false,metrics:{today:0,week:0,month:0,sources:0,monitors:0},projects:[],sources:[],monitors:[],mentions:[],error:'Banco ainda não conectado.'},{status:503});}
+ }catch(error){console.error('[api/dashboard]',error);const message=error instanceof Error?error.message:typeof error==='object'&&error&&'message' in error?String(error.message):'';const timedOut=/statement timeout|57014/i.test(message);return Response.json({connected:false,metrics:{today:0,week:0,month:0,sources:0,monitors:0},projects:[],sources:[],monitors:[],mentions:[],error:timedOut?'O banco está conectado, mas a consulta excedeu o tempo. Execute a migração de desempenho 015.':'Não foi possível consultar o Supabase.'},{status:503});}
 }
