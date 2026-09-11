@@ -1,35 +1,19 @@
 export type KeywordType = 'include' | 'exclude' | 'exact' | 'related';
 export interface MonitorKeyword { id: string; keyword: string; type: KeywordType; }
-export interface MatchDocument { title?: string | null; description?: string | null; content?: string | null; publishedAt?: string | null; }
 export interface KeywordMatch { matched: boolean; keywordId?: string; matchedText?: string; relevanceScore: number; excludedBy?: string; }
 
 export const normalizeForMatch = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').replace(/\s+/g, ' ').trim();
-const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const exactTerm = (text: string, term: string) => new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(term)}(?=$|[^\\p{L}\\p{N}])`, 'gu');
-const occurrences = (text: string, term: string) => [...text.matchAll(exactTerm(text, term))].length;
-const asDocument = (input: string | MatchDocument) => typeof input === 'string'
-  ? { title: '', description: '', content: input, publishedAt: null }
-  : { title: input.title ?? '', description: input.description ?? '', content: input.content ?? '', publishedAt: input.publishedAt ?? null };
+const exactTerm = (text: string, term: string) => new RegExp(`(^|[^\\p{L}\\p{N}])${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?=$|[^\\p{L}\\p{N}])`, 'u').test(text);
 
-export function matchKeywords(input: string | MatchDocument, keywords: MonitorKeyword[]): KeywordMatch {
-  const document = asDocument(input);
-  const title = normalizeForMatch(document.title), description = normalizeForMatch(document.description), content = normalizeForMatch(document.content);
-  const complete = `${title} ${description} ${content}`.trim();
-  const excluded = keywords.find(keyword => keyword.type === 'exclude' && occurrences(complete, normalizeForMatch(keyword.keyword)) > 0);
+export function matchKeywords(text: string, keywords: MonitorKeyword[]): KeywordMatch {
+  const normalized = normalizeForMatch(text);
+  const excluded = keywords.find(k => k.type === 'exclude' && normalized.includes(normalizeForMatch(k.keyword)));
   if (excluded) return { matched: false, relevanceScore: 0, excludedBy: excluded.keyword };
-  const matches = keywords.filter(keyword => keyword.type !== 'exclude').flatMap(keyword => {
-    const term = normalizeForMatch(keyword.keyword);if (!term) return [];
-    const titleCount = occurrences(title, term), descriptionCount = occurrences(description, term), contentCount = occurrences(content, term), total = titleCount + descriptionCount + contentCount;
-    if (!total) return [];
-    const typeBase = keyword.type === 'exact' ? .50 : keyword.type === 'include' ? .40 : .30;
-    const position = titleCount ? .25 : descriptionCount ? .14 : .07;
-    return [{ keyword, score: typeBase + position + Math.min(.12, Math.max(0, total - 1) * .03) }];
-  });
-  if (!matches.length) return { matched: false, relevanceScore: 0 };
-  const distinctBonus = Math.min(.10, Math.max(0, matches.length - 1) * .04);
-  const age = document.publishedAt ? Date.now() - new Date(document.publishedAt).getTime() : Number.POSITIVE_INFINITY;
-  const recencyBonus = age >= 0 && age <= 86400000 ? .05 : age <= 7 * 86400000 ? .025 : 0;
-  const best = [...matches].sort((a,b) => b.score - a.score)[0];
-  return { matched: true, keywordId: best.keyword.id, matchedText: best.keyword.keyword, relevanceScore: Math.min(.99, best.score + distinctBonus + recencyBonus) };
+  const candidates = keywords.filter(k => k.type !== 'exclude').map(k => ({...k, term: normalizeForMatch(k.keyword)}));
+  const exact = candidates.find(k => k.type === 'exact' && exactTerm(normalized, k.term));
+  const included = exact ?? candidates.find(k => exactTerm(normalized, k.term));
+  if (!included) return { matched: false, relevanceScore: 0 };
+  const occurrences = normalized.split(included.term).length - 1;
+  const base = included.type === 'exact' ? 0.86 : included.type === 'include' ? 0.72 : 0.64;
+  return { matched: true, keywordId: included.id, matchedText: included.keyword, relevanceScore: Math.min(0.99, base + Math.min(occurrences, 4) * 0.03) };
 }
-
