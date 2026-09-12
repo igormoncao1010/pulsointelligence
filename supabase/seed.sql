@@ -6,10 +6,11 @@ values
  ('Agência Brasil — Política','agenciabrasil.ebc.com.br','rss','https://agenciabrasil.ebc.com.br/rss/politica/feed.xml','https://agenciabrasil.ebc.com.br/politica','BR',null,'politica',true,30),
  ('Agência Brasil — Economia','agenciabrasil.ebc.com.br','rss','https://agenciabrasil.ebc.com.br/rss/economia/feed.xml','https://agenciabrasil.ebc.com.br/economia','BR',null,'economia',true,30),
  ('Agência Brasil — Justiça','agenciabrasil.ebc.com.br','rss','https://agenciabrasil.ebc.com.br/rss/justica/feed.xml','https://agenciabrasil.ebc.com.br/justica','BR',null,'governo',true,30),
- ('Agência Brasil — Saúde','agenciabrasil.ebc.com.br','rss','https://agenciabrasil.ebc.com.br/rss/saude/feed.xml','https://agenciabrasil.ebc.com.br/saude','BR',null,'outros',true,30),
  ('Câmara dos Deputados — Últimas Notícias','camara.leg.br','rss','https://www.camara.leg.br/noticias/rss/ultimas-noticias','https://www.camara.leg.br/noticias','BR','DF','governo',true,30),
  ('Câmara dos Deputados — Política','camara.leg.br','rss','https://www.camara.leg.br/noticias/rss/dinamico/POLITICA','https://www.camara.leg.br/noticias','BR','DF','politica',true,30),
  ('Câmara dos Deputados — Economia','camara.leg.br','rss','https://www.camara.leg.br/noticias/rss/dinamico/ECONOMIA','https://www.camara.leg.br/noticias','BR','DF','economia',true,30),
  ('Câmara dos Deputados — Segurança','camara.leg.br','rss','https://www.camara.leg.br/noticias/rss/dinamico/SEGURANCA','https://www.camara.leg.br/noticias','BR','DF','governo',true,30),
- ('Câmara dos Deputados — Eleições','camara.leg.br','rss','https://www.camara.leg.br/noticias/rss/dinamico/ELEICOES','https://www.camara.leg.br/noticias','BR','DF','politica',true,30)
+ ('Câmara dos Deputados — Eleições','camara.leg.br','rss','https://www.camara.leg.br/noticias/rss/dinamico/ELEICOES','https://www.camara.leg.br/noticias','BR','DF','eleicoes',true,30),
+ ('TSE — Últimas Notícias Eleitorais','tse.jus.br','rss','https://www.tse.jus.br/rss','https://www.tse.jus.br/comunicacao/noticias','BR','DF','eleicoes',true,30),
+ ('Senado Federal — Últimas Notícias','senado.leg.br','rss','https://www12.senado.leg.br/noticias/feed/todasnoticias/RSS','https://www12.senado.leg.br/noticias','BR','DF','politica',true,30)
 on conflict do nothing;
