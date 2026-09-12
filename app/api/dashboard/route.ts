@@ -1,5 +1,5 @@
 import { createReadClient } from '@/lib/supabase/server';
-export const runtime='nodejs'; export const dynamic='force-dynamic';
+export const runtime='nodejs'; export const dynamic='force-dynamic'; export const maxDuration=60;
 type MonitorMention={id:string;created_at:string;relevance_score:number|null;matched_text:string|null;articles:{title:string;description:string|null;author:string|null;url:string;published_at:string|null;sources:{name:string;source_type:string}|null;sentiment_analysis:Array<{sentiment:string;score:number}>}|null};
 type MonitorRow={id:string;project_id:string;name:string;status:string;created_at:string;monitor_keywords:Array<{keyword:string;type:string}>};
 type RecentMention=MonitorMention&{monitors:{id:string;name:string;project_id:string;status:string}|null};
@@ -29,16 +29,23 @@ export async function GET(){
    ]);
    const failed=[todayResult,weekResult,monthResult,totalResult].find(item=>item.error);
    if(failed?.error)console.error('[api/dashboard monitor metrics]',row.id,failed.error);
-   return [row.id,{today:todayResult.count,week:weekResult.count,month:monthResult.count,total:totalResult.count}] as const;
+   const allMentions:MonitorMention[]=[];const total=totalResult.count??0;const pageSize=1000;
+   for(let from=0;from<total;from+=pageSize){
+    const page=await db.from('mentions').select('id,created_at,relevance_score,matched_text,articles(title,description,author,url,published_at,sources(name,source_type),sentiment_analysis(sentiment,score))').eq('monitor_id',row.id).order('created_at',{ascending:false}).range(from,Math.min(from+pageSize-1,total-1));
+    if(page.error){console.error('[api/dashboard monitor analysis]',row.id,page.error);break}
+    allMentions.push(...((page.data??[]) as unknown as MonitorMention[]));
+    if((page.data?.length??0)<pageSize)break;
+   }
+   return [row.id,{today:todayResult.count,week:weekResult.count,month:monthResult.count,total:totalResult.count,mentions:allMentions}] as const;
   }));
   const metricsByMonitor=new Map(metricEntries);
   const monitors=rows.map(row=>{
-   const mentions=recentMentions.filter(item=>item.monitors?.id===row.id);
+   const counts=metricsByMonitor.get(row.id);
+   const mentions=counts?.mentions.length?counts.mentions:recentMentions.filter(item=>item.monitors?.id===row.id);
    const within=(date:string,cutoff:Date)=>new Date(date)>=cutoff;
    const sourceCounts=new Map<string,number>(); const sentiment={positive:0,neutral:0,negative:0,unknown:0};
    const daily=Array.from({length:7},(_,index)=>{const day=new Date(today);day.setDate(today.getDate()-6+index);return {date:day.toISOString().slice(0,10),count:0}});
    for(const mention of mentions){const source=mention.articles?.sources?.name??'Fonte não identificada';sourceCounts.set(source,(sourceCounts.get(source)??0)+1);const value=mention.articles?.sentiment_analysis?.[0]?.sentiment??'unknown';sentiment[value as keyof typeof sentiment]=(sentiment[value as keyof typeof sentiment]??0)+1;const key=new Date(mention.created_at).toISOString().slice(0,10);const point=daily.find(item=>item.date===key);if(point)point.count++;}
-   const counts=metricsByMonitor.get(row.id);
    return {id:row.id,projectId:row.project_id,name:row.name,status:row.status,createdAt:row.created_at,keywords:row.monitor_keywords??[],metrics:{today:counts?.today??mentions.filter(item=>within(item.created_at,today)).length,week:counts?.week??mentions.filter(item=>within(item.created_at,d7)).length,month:counts?.month??mentions.filter(item=>within(item.created_at,d30)).length,total:counts?.total??mentions.length,averageRelevance:mentions.length?mentions.reduce((sum,item)=>sum+Number(item.relevance_score??0),0)/mentions.length:0},daily,sentiment,topSources:[...sourceCounts.entries()].map(([name,count])=>({name,count})).sort((a,b)=>b.count-a.count).slice(0,5),recent:mentions.sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime()).slice(0,8)};
   });
   const projects=(projectsRows.data??[]).map(project=>({...project,monitorCount:monitors.filter(monitor=>monitor.projectId===project.id).length}));
