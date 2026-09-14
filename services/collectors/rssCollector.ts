@@ -16,7 +16,7 @@ export class RssCollector implements ContentCollector<RssSource> {
 const hashContent=(item:NormalizedContent)=>createHash('sha256').update(`${item.title}|${item.content}`).digest('hex');
 
 export async function collectActiveRssSources(options:{batch?:number;totalBatches?:number}={}):Promise<CollectorResult[]> {
-  const db=createAdminClient(); const {data:sources,error}=await db.from('sources').select('id,name,rss_url,site_url').eq('active',true).eq('source_type','rss').not('rss_url','is',null); if(error) throw error;
+  const db=createAdminClient(); const {data:sources,error}=await db.from('sources').select('id,name,rss_url,site_url').eq('active',true).eq('source_type','rss').not('rss_url','is',null).neq('category','busca-dinamica'); if(error) throw error;
   const {data:monitors,error:monitorsError}=await db.from('monitors').select('id,monitor_keywords(id,keyword,type)').eq('status','active'); if(monitorsError) throw monitorsError;
   const totalBatches=Math.max(1,Math.min(8,options.totalBatches??1)); const batch=Math.max(0,Math.min(totalBatches-1,options.batch??0)); const selected=(sources??[]).filter((_,index)=>index%totalBatches===batch) as RssSource[];
   const collector=new RssCollector(); const results:CollectorResult[]=[];
